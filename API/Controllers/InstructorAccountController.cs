@@ -132,7 +132,13 @@ public async Task<ActionResult<InstructorDto>> ConvertStudentToInstructor([FromB
             if (computeHash[i] != instructor.PasswordHash[i]) return Unauthorized("Invalid Password");
         }
 
-        return Ok(new InstructorDto
+        if (instructor.IsBlocked)
+            {
+                return Unauthorized("Your account has been blocked. Please contact support.");
+            }
+        else
+        {
+            return Ok(new InstructorDto
         {
             FirstName = instructor.FirstName,
             LastName = instructor.LastName,
@@ -144,6 +150,8 @@ public async Task<ActionResult<InstructorDto>> ConvertStudentToInstructor([FromB
             Specialization = instructor.Specialization,
             University = instructor.University
         });
+        }
+        
     }
 
     private async Task<bool> UserExists(string email)

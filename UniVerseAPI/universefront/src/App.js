@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';  // تأكد من أن هذه الاستيرادات في الأعلى
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Home from './Home/Home';
@@ -14,7 +13,8 @@ import Assignments from './Communication/Assignments';
 import Quizzes from './Communication/Quizzes';
 import Reels from './Reels/Reels';
 import UniverseBusiness from './UniverseBusiness/UniverseBusiness';
-
+import AdminLoginPage from './Admin/AdminLoginPage';
+import AdminDashboard from './Admin/AdminDashboard';
 import './App.css';  // تأكد من أن استيراد ملف الـ CSS في الأعلى
 
 const App = () => {
@@ -36,7 +36,8 @@ const App = () => {
         <Route path="/Quizzes" element={<Quizzes />} />
         <Route path="/Reels" element={<Reels />} />
         <Route path="/UniverseBusiness" element={<UniverseBusiness />} />
-
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />    
         
         
 

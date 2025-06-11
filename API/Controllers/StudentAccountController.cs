@@ -64,11 +64,19 @@ public class StudentAccountController(UniverseContext context, ITokenService tok
             if (computeHash[i] != student.PasswordHash[i]) return Unauthorized("Invalid Password");
         }
 
-        return Ok(new StudentDto
+        if (student.IsBlocked)
+            {
+                return Unauthorized("Your account has been blocked. Please contact support.");
+            }
+        else
         {
-            Email = student.Email,
-            Token = tokenService.CreateStudentToken(student)
-        });
+            return Ok(new StudentDto
+                {
+                    Email = student.Email,
+                    Token = tokenService.CreateStudentToken(student)
+        }       );
+        }
+        
     }
 
     private async Task<bool> UserExists(string email)

@@ -1,8 +1,8 @@
 C:\Users\User\UniVerse\API\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\User\UniVerse\API\bin\Debug\net8.0\appsettings.json
 C:\Users\User\UniVerse\API\bin\Debug\net8.0\API.exe
-C:\Users\User\UniVerse\API\bin\Debug\net8.0\API.deps.json
-C:\Users\User\UniVerse\API\bin\Debug\net8.0\API.runtimeconfig.json
+C:\Users\User\UniVerse\api\bin\Debug\net8.0\API.deps.json
+C:\Users\User\UniVerse\api\bin\Debug\net8.0\API.runtimeconfig.json
 C:\Users\User\UniVerse\API\bin\Debug\net8.0\API.dll
 C:\Users\User\UniVerse\API\bin\Debug\net8.0\API.pdb
 C:\Users\User\UniVerse\API\bin\Debug\net8.0\Azure.Core.dll
@@ -167,9 +167,9 @@ C:\Users\User\UniVerse\API\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTa
 C:\Users\User\UniVerse\API\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.API.props
 C:\Users\User\UniVerse\API\obj\Debug\net8.0\staticwebassets.pack.json
 C:\Users\User\UniVerse\API\obj\Debug\net8.0\scopedcss\bundle\API.styles.css
-C:\Users\User\UniVerse\API\obj\Debug\net8.0\API.csproj.Up2Date
+C:\Users\User\UniVerse\api\obj\Debug\net8.0\API.csproj.Up2Date
 C:\Users\User\UniVerse\API\obj\Debug\net8.0\API.dll
 C:\Users\User\UniVerse\API\obj\Debug\net8.0\refint\API.dll
 C:\Users\User\UniVerse\API\obj\Debug\net8.0\API.pdb
-C:\Users\User\UniVerse\API\obj\Debug\net8.0\API.genruntimeconfig.cache
-C:\Users\User\UniVerse\API\obj\Debug\net8.0\ref\API.dll
+C:\Users\User\UniVerse\api\obj\Debug\net8.0\API.genruntimeconfig.cache
+C:\Users\User\UniVerse\api\obj\Debug\net8.0\ref\API.dll

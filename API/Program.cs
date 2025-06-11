@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using API.Extensions;
+using System.Text.Json.Serialization;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +18,11 @@ builder.Services.AddIdentityService(builder.Configuration);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
+
+
 
 
 // Add CORS policy

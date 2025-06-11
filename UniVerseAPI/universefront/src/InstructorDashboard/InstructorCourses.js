@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal, Button, Form } from 'react-bootstrap';
 import {  FaComments, FaQuestionCircle, FaChevronDown, FaEnvelope, FaTasks, FaClipboardList } from 'react-icons/fa';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 
 
 const InstructorCourses = () => {
    const [showSubMenu, setShowSubMenu] = useState(false);
 
-   const handleShowModal = () => setShowModal(true);
-    const handleCloseModal = () => setShowModal(false);
+   const handleShowCreateModal = () => setShowCreateModal(true);
+   const handleShowEditModal = () => setShowEditModal(true);
+    const handleCloseCreateModal = () => setShowCreateModal(false);
+    const handleCloseEditModal = () => setShowEditModal(false);
   
     const handleChange = (e) => {
       setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,19 +40,17 @@ const getInstructorIdFromToken = () => {
 const fetchCourses = async (instructorId) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`/api/course/instructor/${instructorId}`, {
+    const response = await axios.get(`https://localhost:5001/api/course/instructor/${instructorId}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     });
-    if (!response.ok) throw new Error('Failed to fetch courses');
-    const data = await response.json();
-    setCourses(data);
+     console.log("Fetched data:", response.data);
+    setCourses(response.data);
   } catch (error) {
     console.error("Error fetching instructor courses:", error);
   }
 };
-
 
 
 
@@ -64,23 +65,25 @@ const fetchCourses = async (instructorId) => {
   }
 }, []);
 
-const [editingCourseId, setEditingCourseId] = useState(null);
     const [courses, setCourses] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [formData, setFormData] = useState({
       title: '',
       description: '',
       price: '',
       duration: '',
       pictureUrl: '',
-      videoPreviewUrl: ''
+      videoPreviewUrl: '',
+
     });
   
     
-
   
     const handleSubmit = async (e) => {
   e.preventDefault();
+  console.log("Form Submitted!");
+  
   if (!formData.title || !formData.description || !formData.price) {
     alert("Please fill in all required fields.");
     return;
@@ -91,7 +94,9 @@ const [editingCourseId, setEditingCourseId] = useState(null);
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
+      
     });
+    console.log('Sending course data:', formData);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -102,7 +107,7 @@ const [editingCourseId, setEditingCourseId] = useState(null);
     console.log('Course created:', result);
 
     setFormData({ title: '', description: '', price: '', duration: '', pictureUrl: '', videoPreviewUrl: '', instructorId: formData.instructorId });
-    handleCloseModal();
+    handleCloseCreateModal();
     alert('Course created successfully!');
 
     // ✅ اجلب الكورسات مرة أخرى بعد إنشاء الكورس
@@ -117,19 +122,45 @@ const [editingCourseId, setEditingCourseId] = useState(null);
   
 
 
-     const handleEdit = (course) => {
-    setEditingCourseId(course.id);
-    setFormData(course);
-    setShowModal(true);
-  };
+const handleEdit = (course) => {
+  if (!window.confirm('Are you sure you want to edit this course?')) return;
 
+  // ✅ Load course into the form before editing
+  setFormData(course);
+  setShowEditModal(true);
+};
+
+const handleSave = async () => {
+  try {
+    await fetch(`https://localhost:5001/api/course/${formData.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    // Optionally update the course list without reloading
+    setCourses(prev =>
+      prev.map(c => (c.id === formData.id ? formData : c))
+    );
+
+    setShowEditModal(false);
+  } catch (error) {
+    console.error('Failed to update course:', error);
+  }
+};
+
+
+
+  
 
 
   const handleDelete = async (courseId) => {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
 
     try {
-      await fetch(`https://localhost:5001/api/course/delete/${courseId}`, { method: 'DELETE' });
+      await fetch(`https://localhost:5001/api/course/${courseId}`, { method: 'DELETE' });
       setCourses(courses.filter(c => c.id !== courseId));
     } catch (error) {
       console.error('Failed to delete course:', error);
@@ -141,7 +172,7 @@ const [editingCourseId, setEditingCourseId] = useState(null);
     
     <div className="d-flex">
       {/* Sidebar */}
-          <div className="bg-dark text-white vh-100 p-3" style={{ width: '430px' }}>
+          <div className="bg-dark text-white vh-400 p-3" style={{ width: '430px' }}>
       <h4 className="text-white mb-4">UniVerse</h4>
       <ul className="nav flex-column">
         <li className="nav-item mb-2">
@@ -211,7 +242,7 @@ const [editingCourseId, setEditingCourseId] = useState(null);
       <div className="flex-grow-1 p-4 bg-light">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h5 className="mb-0">Jump Into Course Creation</h5>
-          <button className="btn btn-primary" onClick={handleShowModal}>Create Your Course</button>
+          <button className="btn btn-primary" onClick={handleShowCreateModal}>Create Your Course</button>
         </div>
 
          <div className="list-group mb-4">
@@ -221,7 +252,7 @@ const [editingCourseId, setEditingCourseId] = useState(null);
               <div>
                 <h6>{course.title}</h6>
                 <p>{course.description}</p>
-                <small>Price: ${course.price} | Duration: {course.duration} hours</small>
+                <small>Price: {course.price} JD | Duration: {course.duration} hours</small>
               </div>
               <div>
                 <button className="btn btn-sm btn-warning me-2" onClick={() => handleEdit(course)}>Edit</button>
@@ -234,13 +265,50 @@ const [editingCourseId, setEditingCourseId] = useState(null);
 
         
 
-         {/* Modal */}
-         <Modal show={showModal} onHide={handleCloseModal}>
+         {/* Create Modal */}
+         <Modal show={showCreateModal} onHide={handleCloseCreateModal}>
           <Modal.Header closeButton>
             <Modal.Title>Create Course</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-3">
+                <Form.Label>Title</Form.Label>
+                <Form.Control type="text" name="title"  onChange={handleChange} required />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <Form.Control as="textarea" name="description" onChange={handleChange} required />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Price</Form.Label>
+                <Form.Control type="number" name="price" onChange={handleChange} required />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Duration (hours)</Form.Label>
+                <Form.Control type="text" name="duration" onChange={handleChange} />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Picture URL</Form.Label>
+                <Form.Control type="text" name="pictureUrl" onChange={handleChange} />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Video Preview URL</Form.Label>
+                <Form.Control type="text" name="videoPreviewUrl" onChange={handleChange} />
+              </Form.Group>
+              <Button type="submit" variant="primary">Submit</Button>
+            </Form>
+          </Modal.Body>
+        </Modal>
+
+
+        {/*edit Modal */}
+         <Modal show={showEditModal} onHide={handleCloseEditModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Course</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form onSubmit={handleSave}>
               <Form.Group className="mb-3">
                 <Form.Label>Title</Form.Label>
                 <Form.Control type="text" name="title" onChange={handleChange} required />

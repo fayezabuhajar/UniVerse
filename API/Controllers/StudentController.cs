@@ -7,11 +7,12 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
+   
     public class StudentController : BaseApiController
     {
         private readonly UniverseContext _context;
@@ -112,6 +113,34 @@ public async Task<ActionResult<Student>> GetStudentByEmail([FromQuery] string em
 
             return NoContent();
         }
+
+    [HttpPut("block/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BlockStudent(int id)
+    {
+        var student = await _context.Students.FindAsync(id);
+        if (student == null)
+            return NotFound("Student not found");
+
+        student.IsBlocked = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Student blocked successfully" });
+    }
+
+    [HttpPut("unblock/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UnblockStudent(int id)
+    {
+        var student = await _context.Students.FindAsync(id);
+        if (student == null)
+            return NotFound("Student not found");
+
+        student.IsBlocked = false;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Student unblocked successfully" });
+    }
 
         // Update Password
         [HttpPut("{id}/update-password")]

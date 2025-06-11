@@ -12,8 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
+  
     public class InstructorController : BaseApiController
     {
         private readonly UniverseContext _context;
@@ -39,7 +38,7 @@ public ActionResult<int> GetInstructorIdFromToken()
     return Ok(instructorId);
 }
 
-
+    
 
         // Get All Instructors
         [HttpGet]
@@ -93,6 +92,36 @@ public ActionResult<int> GetInstructorIdFromToken()
 
             return Ok(instructor);
         }
+
+          [HttpPut("block/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BlockInstructor(int id)
+    {
+        var instructor = await _context.Instructors.FindAsync(id);
+        if (instructor == null)
+            return NotFound("Instructor not found");
+
+        instructor.IsBlocked = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Instructor blocked successfully" });
+    }
+
+    // Unblock Instructor (اختياري)
+    [HttpPut("unblock/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UnblockInstructor(int id)
+    {
+        var instructor = await _context.Instructors.FindAsync(id);
+        if (instructor == null)
+            return NotFound("Instructor not found");
+
+        instructor.IsBlocked = false;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Instructor unblocked successfully" });
+    }
+
 
         // Update
         [HttpPut("{id}")]

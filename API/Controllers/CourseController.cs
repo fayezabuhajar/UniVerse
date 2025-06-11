@@ -5,6 +5,9 @@ using Core.Entities;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using API.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace API.Controllers
 {
@@ -19,41 +22,98 @@ namespace API.Controllers
             _context = context;
         }
 
+        [HttpPost("reject/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RejectCourse(int id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            if (course == null)
+                return NotFound("Course not found");
+
+            course.Status = CourseStatus.Rejected;
+            course.IsPublished = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Course rejected successfully" });
+        }
+
+
+        [HttpPost("approve/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ApproveCourse(int id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            if (course == null)
+                return NotFound("Course not found");
+
+            course.Status = CourseStatus.Approved;
+            course.IsPublished = true;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Course approved successfully" });
+        }
+
+        
+
         // Get All Courses
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Course>>> GetAllCourses()
+        [HttpGet("approved")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetApprovedCourses()
+        {
+            var courses = await _context.Courses
+                .Where(c => c.Status == CourseStatus.Approved && c.IsPublished)
+                .ToListAsync();
+
+            return Ok(courses);
+        }
+
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetAllCoursesForDebug()
         {
             var courses = await _context.Courses.ToListAsync();
             return Ok(courses);
         }
 
+
+
+        [HttpGet("pending")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetPendingCourses()
+        {
+            var courses = await _context.Courses
+                .Where(c => c.Status == CourseStatus.Pending)
+                .ToListAsync();
+
+            return Ok(courses);
+        }
+
+
         // Create
         [HttpPost("create")]
-public async Task<ActionResult<CourseDto>> CreateCourse(CourseDto dto)
-{
-    var instructor = await _context.Instructors.FindAsync(dto.InstructorId);
-    if (instructor == null) return BadRequest("Instructor not found.");
+        public async Task<ActionResult<CourseDto>> CreateCourse(CourseDto dto)
+        {
+            var instructor = await _context.Instructors.FindAsync(dto.InstructorId);
+            if (instructor == null) return BadRequest("Instructor not found.");
 
-    var course = new Course
-    {
-        Title = dto.Title,
-        Description = dto.Description,
-        Price = dto.Price,
-        Duration = dto.Duration,
-        InstructorId = dto.InstructorId,
-        PictureUrl = dto.PictureUrl,
-        VideoPreviewUrl = dto.VideoPreviewUrl,
-        IsPublished = false,
-        EnrollmentCount = 0,
-        Rating = 0
-    };
+            var course = new Course
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                Price = dto.Price,
+                Duration = dto.Duration,
+                InstructorId = dto.InstructorId,
+                PictureUrl = dto.PictureUrl,
+                VideoPreviewUrl = dto.VideoPreviewUrl,
+                IsPublished = false,
+                Status = CourseStatus.Pending, // ✅ بانتظار الموافقة
+                EnrollmentCount = 0,
+                Rating = 0
+            };
 
-    _context.Courses.Add(course);
-    await _context.SaveChangesAsync();
+            _context.Courses.Add(course);
+            await _context.SaveChangesAsync();
 
-    // 👇 نرجّع نسخة من dto بدل كائن Entity فيه علاقة دورية
-    return Ok(dto);
-}
+            return Ok(dto);
+        }
+
 
   // Get courses by instructor id
 [HttpGet("instructor/{instructorId}")]
