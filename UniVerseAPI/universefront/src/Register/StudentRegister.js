@@ -51,7 +51,7 @@ const StudentRegister = () => {
       const response = await axios.post('http://localhost:5000/api/studentaccount/register', registerData);
       console.log('User Registered:', response.data);
       alert(`Registered successfully! Welcome ${response.data.firstName}`);
-      window.location.href = '/LoginPage';
+      window.location.href = '/login';
     } catch (error) {
       console.error('Registration Error:', error);
       setErrorMessage('There was an error with registration. Please try again.');

@@ -15,6 +15,7 @@ import Reels from './Reels/Reels';
 import UniverseBusiness from './UniverseBusiness/UniverseBusiness';
 import AdminLoginPage from './Admin/AdminLoginPage';
 import AdminDashboard from './Admin/AdminDashboard';
+import CourseFilters from './Courses/CourseFilters';
 import './App.css';  // تأكد من أن استيراد ملف الـ CSS في الأعلى
 
 const App = () => {
@@ -38,7 +39,7 @@ const App = () => {
         <Route path="/UniverseBusiness" element={<UniverseBusiness />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />    
-        
+        <Route path="/Courses/CourseFilters" element={<CourseFilters />} />    
         
 
         

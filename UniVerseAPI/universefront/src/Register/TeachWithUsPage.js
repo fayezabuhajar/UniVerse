@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Navbar, Nav, Form, FormControl, Button, Modal } from 'react-bootstrap';
+import axios from "axios";
+
 
 const TeachWithUsPage = () => {
   const [loading, setLoading] = useState(false);
@@ -18,77 +20,53 @@ const TeachWithUsPage = () => {
     setShowModal(true); // فتح نافذة إدخال الإيميل
   };
 
-  const handleCheckEmail = async () => {
-    if (!email || !password) {
-      setError("Please enter both email and password.");
-      return;
-    }
-    setLoading(true);
-    setError('');
-    setStudentData(null);
+  
 
-    try {
-      const response = await fetch(`https://localhost:5001/api/student/by-email?email=${encodeURIComponent(email)}`);
-      if (!response.ok) {
-        setError("Student with this email not found.");
-        setLoading(false);
-        return;
+      const handleBecomeInstructor = async () => {
+      if (!password) return;
+      setLoading(true);
+
+      try {
+        const token = localStorage.getItem('token');
+        console.log(token);
+        if (!token) {
+          alert("You must be logged in as a student first.");
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.post(
+          "https://localhost:5001/api/InstructorAccount/convert-to-instructor",
+          { password }, // فقط كلمة المرور
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // ✅ التعامل مع النتيجة
+        const result = response.data;
+        localStorage.setItem('token', result.token);
+        window.location.href = '/InstructorCourses';
+        alert("Congratulations! You are now an instructor.");
+        setShowModal(false);
+        setShowConfirmModal(false);
+      } catch (error) {
+        if (error.response) {
+          // 🔍 الخطأ من السيرفر: 400 أو 401 أو 500
+          alert(error.response.data || "Failed to convert to instructor.");
+        } else {
+          // 🛑 خطأ غير متوقع
+          alert("Something went wrong, please try again.");
+        }
+        console.error("Error converting to instructor:", error);
       }
 
-      const data = await response.json();
-      setStudentData(data);
-      setShowModal(false);
-      setShowConfirmModal(true);
-    } catch (err) {
-      setError("Error fetching student data.");
-      console.error(err);
-    }
+      setLoading(false);
+    };
 
-    setLoading(false);
-  };
 
-  const handleBecomeInstructor = async () => {
-    if (!studentData || !password) return;
-    setLoading(true);
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert("You must be logged in as a student first.");
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('https://localhost:5001/api/instructoraccount/convert-to-instructor', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: studentData.email,
-          password: password
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        alert(errorText || 'Failed to convert to instructor.');
-        setLoading(false);
-        return;
-      }
-
-      const result = await response.json();
-      localStorage.setItem('token', result.token);
-      alert("Congratulations! You are now an instructor.");
-      setShowConfirmModal(false);
-    } catch (error) {
-      alert("Something went wrong, please try again.");
-      console.error(error);
-    }
-
-    setLoading(false);
-  };
 
   return (
     <>
@@ -130,22 +108,12 @@ const TeachWithUsPage = () => {
           </div>
         </div>
 
-        {/* Modal: إدخال الإيميل وكلمة المرور */}
+        {/* Modal: إدخال كلمة المرور فقط */} 
         <Modal show={showModal} onHide={() => setShowModal(false)} centered>
           <Modal.Header closeButton>
             <Modal.Title>Become an Instructor</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form.Group controlId="formEmail">
-              <Form.Label>Enter your student email</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Form.Group>
-
             <Form.Group controlId="formPassword" className="mt-3">
               <Form.Label>Create a password</Form.Label>
               <Form.Control
@@ -164,13 +132,14 @@ const TeachWithUsPage = () => {
             </Button>
             <Button
               variant="primary"
-              onClick={handleCheckEmail}
-              disabled={loading || !email || !password}
+              onClick={handleBecomeInstructor}
+              disabled={loading || !password}
             >
-              {loading ? "Checking..." : "Continue"}
+              {loading ? "Processing..." : "Continue"}
             </Button>
           </Modal.Footer>
         </Modal>
+
 
         {/* Modal: تأكيد التحويل إلى مدرب */}
         <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
@@ -178,7 +147,6 @@ const TeachWithUsPage = () => {
             <Modal.Title>Confirm Instructor Registration</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>Student email: <strong>{studentData?.email}</strong></p>
             <p>Are you sure you want to become an instructor?</p>
           </Modal.Body>
           <Modal.Footer>

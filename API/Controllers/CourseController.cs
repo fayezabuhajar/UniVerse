@@ -11,8 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
+    
     public class CourseController : BaseApiController
     {
         private readonly UniverseContext _context;
@@ -21,6 +20,24 @@ namespace API.Controllers
         {
             _context = context;
         }
+
+       
+        // GET https://localhost:5001/api/courses
+        [HttpGet]
+        public async Task<IActionResult> GetCourses()
+        {
+            var courses = await _context.Courses.ToListAsync();
+            return Ok(courses);
+        }
+
+  
+
+
+
+
+
+
+
 
         [HttpPost("reject/{id}")]
         [Authorize(Roles = "Admin")]
@@ -100,6 +117,8 @@ namespace API.Controllers
                 Price = dto.Price,
                 Duration = dto.Duration,
                 InstructorId = dto.InstructorId,
+                University = instructor.University,
+                Specialization = instructor.Specialization,
                 PictureUrl = dto.PictureUrl,
                 VideoPreviewUrl = dto.VideoPreviewUrl,
                 IsPublished = false,
@@ -115,16 +134,42 @@ namespace API.Controllers
         }
 
 
-  // Get courses by instructor id
-[HttpGet("instructor/{instructorId}")]
-public async Task<ActionResult<IEnumerable<Course>>> GetCoursesByInstructor(int instructorId)
-{
-    var courses = await _context.Courses
-        .Where(c => c.InstructorId == instructorId)
-        .ToListAsync();
+       [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<object>>> GetCoursesWithFilter(
+            [FromQuery] string? university,
+            [FromQuery] string? specialization)
+        {
+            var query = _context.Courses.AsQueryable();
 
-    return Ok(courses);
-}
+            if (!string.IsNullOrEmpty(university))
+                query = query.Where(c => c.University == university);
+
+            if (!string.IsNullOrEmpty(specialization))
+                query = query.Where(c => c.Specialization == specialization);
+
+            var courses = await query.Select(c => new
+            {
+                Id = c.Id,
+                Title = c.Title,
+                University = c.University,
+                Specialization = c.Specialization
+            }).ToListAsync();
+
+            return Ok(courses);
+        }
+
+
+
+        // Get courses by instructor id
+        [HttpGet("instructor/{instructorId}")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetCoursesByInstructor(int instructorId)
+        {
+            var courses = await _context.Courses
+                .Where(c => c.InstructorId == instructorId)
+                .ToListAsync();
+
+            return Ok(courses);
+        }
 
 
 

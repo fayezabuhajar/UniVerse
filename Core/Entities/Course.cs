@@ -30,6 +30,9 @@ namespace Core.Entities
   
         public float Rating { get; set; }
 
+        public required string University { get; set; }
+        public required string Specialization { get; set; }
+
  
         public Instructor? Instructor { get; set; }
 

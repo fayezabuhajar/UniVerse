@@ -57,6 +57,8 @@ namespace API.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Email, student.Email),
+                new Claim(ClaimTypes.Role, "Student") // هنا تضيف الدور مباشرة
+
                 
                 // يمكنك إضافة claims أخرى حسب الحاجة
             };

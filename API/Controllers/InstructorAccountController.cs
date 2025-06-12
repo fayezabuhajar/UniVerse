@@ -58,62 +58,64 @@ public class InstructorAccountController(UniverseContext context, ITokenService 
         return Ok(instructorDto);
     }
 
-[HttpPost("convert-to-instructor")]
-public async Task<ActionResult<InstructorDto>> ConvertStudentToInstructor([FromBody] EmailPasswordDto dto)
-{
-    var email = dto.Email;
-    var newPassword = dto.Password;
 
-    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(newPassword))
-        return BadRequest("Email and password are required.");
-
-    // تحقق إذا كان المستخدم مدرب بالفعل
-    if (await context.Instructors.AnyAsync(i => i.Email == email))
-        return BadRequest("User is already an instructor.");
-
-    // الحصول على الطالب
-    var student = await context.Students.FirstOrDefaultAsync(s => s.Email == email);
-    if (student == null)
-        return NotFound("Student not found.");
-
-    // إنشاء كلمة مرور جديدة
-    using var hmac = new HMACSHA512();
-    var passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(newPassword));
-    var passwordSalt = hmac.Key;
-
-    var instructor = new Instructor
+    [Authorize(Roles = "Student")]
+    [HttpPost("convert-to-instructor")]
+    public async Task<ActionResult<InstructorDto>> ConvertStudentToInstructor([FromBody] InstructorPasswordDto dto)
     {
-        FirstName = student.FirstName,
-        LastName = student.LastName,
-        UserName = student.UserName,
-        Email = student.Email,
-        PasswordHash = passwordHash,
-        PasswordSalt = passwordSalt,
-        DateOfBirth = student.DateOfBirth,
-        Gender = student.Gender,
-        Bio = student.Bio,
-        University = student.University,
-        Specialization = student.Specialization
-    };
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(email))
+            return Unauthorized("Email not found in token.");
 
-    context.Instructors.Add(instructor);
-    await context.SaveChangesAsync();
+        var newPassword = dto.Password;
+        if (string.IsNullOrWhiteSpace(newPassword))
+            return BadRequest("Password is required.");
 
-    var token = tokenService.CreateInstructorToken(instructor);
+        if (await context.Instructors.AnyAsync(i => i.Email == email))
+            return BadRequest("User is already an instructor.");
 
-    return Ok(new InstructorDto
-    {
-        FirstName = instructor.FirstName,
-        LastName = instructor.LastName,
-        UserName = instructor.UserName,
-        Email = instructor.Email,
-        Token = token,
-        DateOfBirth = instructor.DateOfBirth,
-        Gender = instructor.Gender,
-        University = instructor.University,
-        Specialization = instructor.Specialization
-    });
-}
+        var student = await context.Students.FirstOrDefaultAsync(s => s.Email == email);
+        if (student == null)
+            return NotFound("Student not found.");
+
+        using var hmac = new HMACSHA512();
+        var passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(newPassword));
+        var passwordSalt = hmac.Key;
+
+        var instructor = new Instructor
+        {
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            UserName = student.UserName,
+            Email = student.Email,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            DateOfBirth = student.DateOfBirth,
+            Gender = student.Gender,
+            Bio = student.Bio,
+            University = student.University,
+            Specialization = student.Specialization
+        };
+
+        context.Instructors.Add(instructor);
+        await context.SaveChangesAsync();
+
+        var token = tokenService.CreateInstructorToken(instructor);
+
+        return Ok(new InstructorDto
+        {
+            FirstName = instructor.FirstName,
+            LastName = instructor.LastName,
+            UserName = instructor.UserName,
+            Email = instructor.Email,
+            Token = token,
+            DateOfBirth = instructor.DateOfBirth,
+            Gender = instructor.Gender,
+            University = instructor.University,
+            Specialization = instructor.Specialization
+        });
+    }
+
 
 
 
